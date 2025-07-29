@@ -14,6 +14,7 @@ from .pretransforms import Pretransform
 from .transformer import ContinuousTransformer
 from ..inference.generation import generate_diffusion_cond
 from ..inference.sampling import DistributionShift
+from .lyric_autoencoder import LyricsAutoencoder
 
 from time import time
 
@@ -115,10 +116,16 @@ class ConditionedDiffusionModelWrapper(nn.Module):
             global_cond_ids: tp.List[str] = [],
             input_concat_ids: tp.List[str] = [],
             prepend_cond_ids: tp.List[str] = [],
+            lyrics_cond_ids: tp.List[str] = [],
             ):
         super().__init__()
 
         self.model = model
+        self.lyrics_encoder = LyricsAutoencoder(
+            input_dim=768, 
+            hidden_dims=[512, 256], 
+            latent_dim=128, 
+            seq_len=32) if "lyrics" in lyrics_cond_ids else None
         self.conditioner = conditioner
         self.io_channels = io_channels
         self.sample_rate = sample_rate
@@ -128,6 +135,7 @@ class ConditionedDiffusionModelWrapper(nn.Module):
         self.global_cond_ids = global_cond_ids
         self.input_concat_ids = input_concat_ids
         self.prepend_cond_ids = prepend_cond_ids
+        self.lyrics_cond_ids = lyrics_cond_ids
         self.min_input_length = min_input_length
 
         self.dist_shift = None
@@ -141,6 +149,7 @@ class ConditionedDiffusionModelWrapper(nn.Module):
         input_concat_cond = None
         prepend_cond = None
         prepend_cond_mask = None
+        lyrics_latents = None
 
         if len(self.cross_attn_cond_ids) > 0:
             # Concatenate all cross-attention inputs over the sequence dimension
@@ -195,6 +204,15 @@ class ConditionedDiffusionModelWrapper(nn.Module):
 
             prepend_cond = torch.cat(prepend_conds, dim=1)
             prepend_cond_mask = torch.cat(prepend_cond_masks, dim=1)
+
+        if len(self.lyrics_cond_ids) > 0:
+            lyrics_latents_list = []
+            for key in self.lyrics_cond_ids:
+                # Assuming your lyrics autoencoder is called within conditioner
+                lyrics_latents_list.append(self.lyrics_encoder.encode(conditioning_tensors[key]))
+                # The conditioner should ideally handle the encoding
+                lyrics_latents_list.append(conditioning_tensors[key][0]) # Assuming conditioner provides the latent directly
+            lyrics_latents = torch.cat(lyrics_latents_list, dim=1)      # If multiple lyric latents, concat them
 
         if negative:
             return {
@@ -508,6 +526,7 @@ class DiTWrapper(ConditionedDiffusionModel):
     def __init__(
         self,
         diffusion_objective: str,
+        lyrics_latent_dim: tp.Optional[int] = None,         # Make it optional if not always used
         *args,
         **kwargs
     ):
@@ -515,7 +534,11 @@ class DiTWrapper(ConditionedDiffusionModel):
 
         self.diffusion_objective = diffusion_objective
 
-        self.model = DiffusionTransformer(diffusion_objective=diffusion_objective, *args, **kwargs)
+        self.model = DiffusionTransformer(
+            diffusion_objective=diffusion_objective,
+            lyrics_latent_dim=lyrics_latent_dim, 
+            *args, 
+            **kwargs)
 
     def forward(self,
                 x,
@@ -530,6 +553,8 @@ class DiTWrapper(ConditionedDiffusionModel):
                 negative_global_cond=None,
                 prepend_cond=None,
                 prepend_cond_mask=None,
+                lyrics_latent: tp.Optional[torch.Tensor] = None,
+                negative_lyrics_latent: tp.Optional[torch.Tensor] = None,
                 cfg_scale=1.0,
                 cfg_dropout_prob: float = 0.0,
                 batch_cfg: bool = True,
@@ -550,6 +575,8 @@ class DiTWrapper(ConditionedDiffusionModel):
             input_concat_cond=input_concat_cond,
             prepend_cond=prepend_cond,
             prepend_cond_mask=prepend_cond_mask,
+            lyrics_latent=lyrics_latent,
+            negative_lyrics_latent=negative_lyrics_latent,
             cfg_scale=cfg_scale,
             cfg_dropout_prob=cfg_dropout_prob,
             scale_phi=scale_phi,
