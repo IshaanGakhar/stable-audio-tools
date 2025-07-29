@@ -14,8 +14,8 @@ class DiffusionTransformer(nn.Module):
         io_channels=32, 
         patch_size=1,
         embed_dim=768,
-        cond_token_dim=0,
-        project_cond_tokens=True,
+        cond_token_dim=0,               # TODO verify for lyric encoder
+        project_cond_tokens=True,       # TODO verify for lyric encoder (768 for bertbase uncased)
         global_cond_dim=0,
         project_global_cond=True,
         input_concat_dim=0,
