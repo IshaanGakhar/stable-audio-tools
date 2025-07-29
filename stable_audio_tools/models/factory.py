@@ -26,6 +26,7 @@ def create_model_from_config(model_config):
 def create_model_from_config_path(model_config_path):
     with open(model_config_path) as f:
         model_config = json.load(f)
+    # TODO define lyric encoder in config
     
     return create_model_from_config(model_config)
 

@@ -97,6 +97,7 @@ class ConditionedDiffusionModel(nn.Module):
                 rescale_cfg: bool = False,
                 **kwargs):
         raise NotImplementedError()
+    # TODO add lyric encoder args
 
 class ConditionedDiffusionModelWrapper(nn.Module):
     """
@@ -142,7 +143,7 @@ class ConditionedDiffusionModelWrapper(nn.Module):
         if distribution_shift_options is not None:
             self.dist_shift = DistributionShift(**distribution_shift_options)     
 
-    def get_conditioning_inputs(self, conditioning_tensors: tp.Dict[str, tp.Any], negative=False):
+    def get_conditioning_inputs(self, conditioning_tensors: tp.Dict[str, tp.Any], negative=False): # TODO add lyric latents as input for DiT
         cross_attention_input = None
         cross_attention_masks = None
         global_cond = None
@@ -553,7 +554,7 @@ class DiTWrapper(ConditionedDiffusionModel):
                 negative_global_cond=None,
                 prepend_cond=None,
                 prepend_cond_mask=None,
-                lyrics_latent: tp.Optional[torch.Tensor] = None,
+                lyrics_latent: tp.Optional[torch.Tensor] = None, # TODO: unprocessed hereon
                 negative_lyrics_latent: tp.Optional[torch.Tensor] = None,
                 cfg_scale=1.0,
                 cfg_dropout_prob: float = 0.0,
@@ -653,7 +654,7 @@ def create_diffusion_uncond_from_config(config: tp.Dict[str, tp.Any]):
                                 pretransform=pretransform,
                                 min_input_length=min_input_length)
 
-def create_diffusion_cond_from_config(config: tp.Dict[str, tp.Any]):
+def create_diffusion_cond_from_config(config: tp.Dict[str, tp.Any]): # TODO: need to extract lyric encoder params
 
     model_config = config["model"]
 

@@ -12,6 +12,7 @@ from .factory import create_pretransform_from_config
 from .pretransforms import Pretransform
 from .utils import load_ckpt_state_dict
 from .transformer import AbsolutePositionalEmbedding
+from .lyric_autoencoder import LyricsAutoencoder
 
 from torch import nn
 
@@ -711,6 +712,8 @@ def create_multi_conditioner_from_conditioning_config(config: tp.Dict[str, tp.An
             conditioners[id] = T5Conditioner(**conditioner_config)
         elif conditioner_type == "clap_text":
             conditioners[id] = CLAPTextConditioner(**conditioner_config)
+        elif config['type'] == "lyric_autoencoder":                               # TODO: add lyric_autoencoder to config              
+            conditioners[config['id']] = LyricsAutoencoder(**conditioner_config)  # should return (tensor, mask)
         elif conditioner_type == "clap_audio":
             conditioners[id] = CLAPAudioConditioner(**conditioner_config)
         elif conditioner_type == "int":

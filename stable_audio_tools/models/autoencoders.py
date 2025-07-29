@@ -72,7 +72,7 @@ class ResidualUnit(nn.Module):
                       kernel_size=1)
         )
 
-    def forward(self, x):
+    def forward(self, x): # TODO do we need to add lyric latents for DiT here too?
         res = x
         
         if self.training:
@@ -398,7 +398,7 @@ class DACDecoderWrapper(nn.Module):
     def forward(self, x):
         return self.decoder(x)
 
-class AudioAutoencoder(nn.Module):
+class AudioAutoencoder(nn.Module): # TODO: decide if we need to use lyric encoder here
     def __init__(
         self,
         encoder,
