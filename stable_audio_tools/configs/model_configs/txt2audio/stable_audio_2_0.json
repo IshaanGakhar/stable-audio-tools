@@ -86,6 +86,11 @@
                 "transformer_type": "continuous_transformer"
             }
         },
+        "lyric_encoder": {
+            "encoder_model_name": "facebook/t5-base",
+            "latent_dim": 1024,
+            "seq_len": 256
+        },
         "io_channels": 64
     },
     "training": {
