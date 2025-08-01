@@ -8,7 +8,7 @@ from encodec.utils import EncodecTokenizer
 class LyricsAutoencoder(nn.Module):
     def __init__(
         self,
-        t5_model_name: str = "t5-base", # flan-t5-base also works
+        t5_model_name: str = "t5-base", # google/flan-t5-base also works
         latent_dim: int = 1024, # same as MusicGen-small
         seq_len: int = 256, # same as MusicGen
     ):
