@@ -236,6 +236,14 @@ class SampleDataset(torch.utils.data.Dataset):
 
             info["load_time"] = end_time - start_time
 
+            # Load lyrics from corresponding .txt file
+            lyrics_path = os.path.splitext(audio_filename)[0] + ".txt"
+            if os.path.exists(lyrics_path):
+                with open(lyrics_path, "r", encoding="utf-8") as f:
+                    info["lyrics"] = f.read().strip()
+            else:
+                info["lyrics"] = ""  # or None
+
             for custom_md_path in self.custom_metadata_fns.keys():
                 if custom_md_path in audio_filename:
                     custom_metadata_fn = self.custom_metadata_fns[custom_md_path]
