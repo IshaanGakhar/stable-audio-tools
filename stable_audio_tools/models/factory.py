@@ -13,7 +13,16 @@ def create_model_from_config(model_config):
         return create_diffusion_uncond_from_config(model_config)
     elif model_type == 'diffusion_cond' or model_type == 'diffusion_cond_inpaint':
         from .diffusion import create_diffusion_cond_from_config
-        return create_diffusion_cond_from_config(model_config)
+        lyric_encoder_config = model_config.get("lyric_encoder", None)
+    lyric_encoder = None
+    if lyric_encoder_config is not None:
+        from .lyric_autoencoder import LyricsAutoencoder
+        lyric_encoder = LyricsAutoencoder(
+            encoder_model_name=lyric_encoder_config.get("encoder_model_name", "t5-base"),
+            latent_dim=lyric_encoder_config.get("latent_dim", 1024),
+            seq_len=lyric_encoder_config.get("seq_len", 256)
+        )
+        return create_diffusion_cond_from_config(model_config, lyric_encoder=lyric_encoder)
     elif model_type == 'diffusion_autoencoder':
         from .autoencoders import create_diffAE_from_config
         return create_diffAE_from_config(model_config)
