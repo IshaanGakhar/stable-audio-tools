@@ -1,50 +1,54 @@
-# stable_audio_tools/models/autoencoders/lyrics_autoencoder.py
 import torch
 from torch import nn
-from torch.nn import functional as F
 import typing as tp
 
-# tokenizer, embedder, encoder, VAE
+from transformers import T5EncoderModel, T5Tokenizer
+from encodec.utils import EncodecTokenizer
 
 class LyricsAutoencoder(nn.Module):
-    def __init__(self,
-                 input_dim: int,       # e.g., vocabulary size for one-hot, or embedding dim for pre-trained
-                 hidden_dims: tp.List[int],
-                 latent_dim: int,
-                 seq_len: int):        # Expected input sequence length of lyrics
+    def __init__(
+        self,
+        t5_model_name: str = "t5-base", # flan-t5-base also works
+        latent_dim: int = 1024, # same as MusicGen-small
+        seq_len: int = 256, # same as MusicGen
+    ):
         super().__init__()
-        self.latent_dim = latent_dim
+        # T5 setup
+        self.t5_tokenizer = T5Tokenizer.from_pretrained(t5_model_name)
+        self.t5_encoder = T5EncoderModel.from_pretrained(t5_model_name)
+        self.t5_encoder.eval()  # Usually frozen for inference
+
+        # Project T5 output to latent_dim
+        self.t5_proj = nn.Linear(self.t5_encoder.config.d_model, latent_dim)
+
         self.seq_len = seq_len
+        self.latent_dim = latent_dim
 
-        # Example: Simple MLP encoder (you'll likely want something more sophisticated for lyrics)
-        # If input_dim is a vocab size, you might need an embedding layer first
-        # For simplicity, let's assume input_dim is the embedding size per token, or a flattened input.
-
-        encoder_layers = []
-        current_dim = input_dim * seq_len # Flatten input for simplicity here, or adapt for sequence processing
-        for h_dim in hidden_dims:
-            encoder_layers.append(nn.Linear(current_dim, h_dim))
-            encoder_layers.append(nn.GELU()) # Or ReLU, etc.
-            current_dim = h_dim
-        encoder_layers.append(nn.Linear(current_dim, latent_dim))
-        self.encoder = nn.Sequential(*encoder_layers)
-
-        # You'd also need a decoder if you plan to train this autoencoder
-        # self.decoder = nn.Sequential(...)
-
-    def encode(self, lyrics_data: torch.Tensor) -> torch.Tensor:
-        # lyrics_data shape: (batch_size, seq_len, input_dim)
-        # You might need to flatten or adapt based on your encoder
-        # For this example, assuming input_dim is 1 (token ID) and we embed it first
-        # Or if input_dim is already an embedding
+    def encode(self, lyrics: tp.List[str], audio: torch.Tensor = None) -> torch.Tensor:
+        """
+        lyrics: List of lyric strings (batch)
+        Returns: (batch, seq_len, latent_dim)
+        Example:
+            lyrics = [
+                "We're no strangers to love, you know the rules and so do I.",
+                "Never gonna give you up, never gonna let you down."
+            ]
+        """
+        # T5 encoding
+        t5_inputs = self.t5_tokenizer(
+            lyrics, 
+            return_tensors="pt", 
+            padding="max_length", 
+            max_length=self.seq_len, 
+            truncation=True
+            )
         
-        # Example: Simple flattening for the MLP
-        batch_size, seq_len, input_dim = lyrics_data.shape
-        flat_lyrics = lyrics_data.view(batch_size, -1) # (batch_size, seq_len * input_dim)
+        t5_outputs = self.t5_encoder(
+            input_ids=t5_inputs.input_ids, 
+            attention_mask=t5_inputs.attention_mask
+            )
         
-        latent = self.encoder(flat_lyrics)
-        return latent
-
-    # decode method if it's a VAE or traditional autoencoder
-
-    # For the DiT integration, we primarily care about the 'encode' method
+        t5_latent = self.t5_proj(t5_outputs.last_hidden_state
+                                 )  # (batch, seq_len, latent_dim)
+        
+        return t5_latent
