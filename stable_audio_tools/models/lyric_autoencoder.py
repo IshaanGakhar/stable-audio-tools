@@ -8,14 +8,14 @@ from encodec.utils import EncodecTokenizer
 class LyricsAutoencoder(nn.Module):
     def __init__(
         self,
-        t5_model_name: str = "t5-base", # google/flan-t5-base also works
+        encoder_model_name: str = "t5-base", # google/flan-t5-base also works
         latent_dim: int = 1024, # same as MusicGen-small
         seq_len: int = 256, # same as MusicGen
     ):
         super().__init__()
         # T5 setup
-        self.t5_tokenizer = T5Tokenizer.from_pretrained(t5_model_name)
-        self.t5_encoder = T5EncoderModel.from_pretrained(t5_model_name)
+        self.t5_tokenizer = T5Tokenizer.from_pretrained(encoder_model_name)
+        self.t5_encoder = T5EncoderModel.from_pretrained(encoder_model_name)
         self.t5_encoder.eval()  # Usually frozen for inference
 
         # Project T5 output to latent_dim
