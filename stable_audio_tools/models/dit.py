@@ -249,6 +249,7 @@ class DiffusionTransformer(nn.Module):
         mask=None,
         return_info=False,
         exit_layer_ix=None,
+        lyric_latents=None,
         **kwargs):
 
         assert causal == False, "Causal mode is not supported for DiffusionTransformer"
@@ -259,7 +260,8 @@ class DiffusionTransformer(nn.Module):
 
         t = t.to(model_dtype)
 
-        if cross_attn_cond is not None:
+        if cross_attn_cond and lyric_latents:
+            cross_attn_cond = torch.cat([cross_attn_cond, lyric_latents], dim=1)
             cross_attn_cond = cross_attn_cond.to(model_dtype)
 
         if negative_cross_attn_cond is not None:
