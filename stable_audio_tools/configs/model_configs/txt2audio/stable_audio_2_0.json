@@ -67,12 +67,29 @@
                         "min_val": 0,
                         "max_val": 512
                     }
+                },
+                {
+                    "type": "text",
+                    "config": {
+                        "encoder_model_name": "facebook/t5-base",
+                        "latent_dim": 1024,
+                        "seq_len": 256
+                    }
+                },
+                {
+                    "id": "vocals",
+                    "type": "audio",
+                    "config": {
+                        "encoder_model_name": "facebook/wav2vec2-base",
+                        "latent_dim": 512,
+                        "seq_len": 256
+                    }
                 }
             ],
             "cond_dim": 768
         },
         "diffusion": {
-            "cross_attention_cond_ids": ["prompt", "seconds_start", "seconds_total"],
+            "cross_attention_cond_ids": ["prompt", "seconds_start", "seconds_total", "lyrics", "vocals"],
             "global_cond_ids": ["seconds_start", "seconds_total"],
             "type": "dit",
             "config": {
@@ -89,6 +106,11 @@
         "lyric_encoder": {
             "encoder_model_name": "facebook/t5-base",
             "latent_dim": 1024,
+            "seq_len": 256
+        },
+        "vocals_encoder": {
+            "encoder_model_name": "facebook/wav2vec2-base",
+            "latent_dim": 512,
             "seq_len": 256
         },
         "io_channels": 64

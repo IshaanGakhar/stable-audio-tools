@@ -11,11 +11,14 @@ import time
 import torch
 import torchaudio
 import webdataset as wds
+import demucs
 
 from os import path
 from torch import nn
 from torchaudio import transforms as T
 from typing import Optional, Callable, List
+from demucs.apply import apply_model
+from demucs.pretrained import get_model
 
 from .utils import Stereo, Mono, PhaseFlipper, PadCrop_Normalized_T, VolumeNorm
 
@@ -158,21 +161,17 @@ class SampleDataset(torch.utils.data.Dataset):
         self.augs = torch.nn.Sequential(
             PhaseFlipper()
         )
-
         self.root_paths = []
-
         self.pad_crop = PadCrop_Normalized_T(sample_size, sample_rate, randomize=random_crop)
-
         self.force_channels = force_channels
-
         self.encoding = torch.nn.Sequential(
             Stereo() if self.force_channels == "stereo" else torch.nn.Identity(),
             Mono() if self.force_channels == "mono" else torch.nn.Identity(),
         )
-
         self.sr = sample_rate
-
         self.custom_metadata_fns = {}
+        # demucs is slow for large datasets, so we load it once here
+        self.demucs_model = get_model("htdemucs", device="cpu", download=True)
 
         for config in configs:
             self.root_paths.append(config.path)
@@ -200,7 +199,7 @@ class SampleDataset(torch.utils.data.Dataset):
         audio_filename = self.filenames[idx]
         try:
             start_time = time.time()
-            audio = self.load_file(audio_filename)
+            audio = self.load_file(audio_filename) # [Channels, Samples]
 
             audio, t_start, t_end, seconds_start, seconds_total, padding_mask = self.pad_crop(audio)
 
@@ -217,6 +216,14 @@ class SampleDataset(torch.utils.data.Dataset):
             # Encode the file to assist in prediction
             if self.encoding is not None:
                 audio = self.encoding(audio)
+
+            # Demucs expects numpy float32
+            audio_np = audio.cpu().numpy().T
+            sources = apply_model(
+                self.demucs_model, audio_np, device="cpu", progress=False, split=True)
+            vocals = sources[0][1].T
+
+            vocals_tensor = torch.from_numpy(vocals).float()
 
             info = {}
 
@@ -243,6 +250,8 @@ class SampleDataset(torch.utils.data.Dataset):
                     info["lyrics"] = f.read().strip()
             else:
                 info["lyrics"] = ""  # or None
+
+            info["vocals"] = vocals_tensor
 
             for custom_md_path in self.custom_metadata_fns.keys():
                 if custom_md_path in audio_filename:

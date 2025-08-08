@@ -118,7 +118,8 @@ class ConditionedDiffusionModelWrapper(nn.Module):
             input_concat_ids: tp.List[str] = [],
             prepend_cond_ids: tp.List[str] = [],
             lyrics_cond_ids: tp.List[str] = [],
-            lyric_encoder=None
+            lyric_encoder=None,
+            vocals_encoder=None,
             ):
         super().__init__()
 
@@ -135,6 +136,7 @@ class ConditionedDiffusionModelWrapper(nn.Module):
         self.prepend_cond_ids = prepend_cond_ids
         self.lyrics_cond_ids = lyrics_cond_ids
         self.min_input_length = min_input_length
+        self.vocals_encoder = vocals_encoder
 
         self.dist_shift = None
         if distribution_shift_options is not None:
@@ -148,11 +150,16 @@ class ConditionedDiffusionModelWrapper(nn.Module):
         prepend_cond = None
         prepend_cond_mask = None
         lyrics_latents = None
+        vocals_latents = None
 
         if self.lyric_encoder is not None and len(self.lyrics_cond_ids) > 0:
             # Encode lyrics using the lyric encoder
             lyrics_batch = conditioning_tensors[self.lyrics_cond_ids[0][0]] #TODO verify indexing
             lyric_latents = self.lyrics_encoder.encode(lyrics_batch)
+
+        if self.vocals_encoder is not None and "vocals" in conditioning_tensors:
+            vocals_batch = conditioning_tensors["vocals"]
+            vocals_latents = self.vocals_encoder.encode(vocals_batch)
 
         if len(self.cross_attn_cond_ids) > 0:
             # Concatenate all cross-attention inputs over the sequence dimension
@@ -232,7 +239,8 @@ class ConditionedDiffusionModelWrapper(nn.Module):
                 "input_concat_cond": input_concat_cond,
                 "prepend_cond": prepend_cond,
                 "prepend_cond_mask": prepend_cond_mask,
-                "lyrics_latent": lyrics_latents
+                "lyrics_latent": lyrics_latents,
+                "vocals_latent": vocals_latents
             }
 
     def forward(self, x: torch.Tensor, t: torch.Tensor, cond: tp.Dict[str, tp.Any], **kwargs):
@@ -558,6 +566,7 @@ class DiTWrapper(ConditionedDiffusionModel):
                 prepend_cond=None,
                 prepend_cond_mask=None,
                 lyrics_latent: tp.Optional[torch.Tensor] = None, # TODO: unprocessed hereon
+                vocals_latent: tp.Optional[torch.Tensor] = None,
                 negative_lyrics_latent: tp.Optional[torch.Tensor] = None,
                 cfg_scale=1.0,
                 cfg_dropout_prob: float = 0.0,
@@ -580,6 +589,7 @@ class DiTWrapper(ConditionedDiffusionModel):
             prepend_cond=prepend_cond,
             prepend_cond_mask=prepend_cond_mask,
             lyrics_latent=lyrics_latent,
+            vocals_latent=vocals_latent,
             negative_lyrics_latent=negative_lyrics_latent,
             cfg_scale=cfg_scale,
             cfg_dropout_prob=cfg_dropout_prob,
