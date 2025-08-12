@@ -69,6 +69,7 @@
                     }
                 },
                 {
+                    "id": "lyrics",
                     "type": "text",
                     "config": {
                         "encoder_model_name": "facebook/t5-base",
