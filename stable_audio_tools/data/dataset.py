@@ -191,6 +191,13 @@ class SampleDataset(torch.utils.data.Dataset):
             audio = resample_tf(audio)
 
         return audio
+    
+    def crop_lyrics_to_segment(full_lyrics, seconds_start, seconds_total, total_song_duration):
+        # Simple proportional cropping
+        num_chars = len(full_lyrics)
+        start_char = int((seconds_start / total_song_duration) * num_chars)
+        end_char = int(((seconds_start + seconds_total) / total_song_duration) * num_chars)
+        return full_lyrics[start_char:end_char]
 
     def __len__(self):
         return len(self.filenames)
@@ -233,23 +240,31 @@ class SampleDataset(torch.utils.data.Dataset):
                 if root_path in audio_filename:
                     info["relpath"] = path.relpath(audio_filename, root_path)
 
-            info["timestamps"] = (t_start, t_end)
-            info["seconds_start"] = seconds_start
-            info["seconds_total"] = seconds_total
-            info["padding_mask"] = padding_mask
-            info["sample_rate"] = self.sr
-
-            end_time = time.time()
-
-            info["load_time"] = end_time - start_time
-
             # Load lyrics from corresponding .txt file
             lyrics_path = os.path.splitext(audio_filename)[0] + ".txt"
             if os.path.exists(lyrics_path):
                 with open(lyrics_path, "r", encoding="utf-8") as f:
-                    info["lyrics"] = f.read().strip()
+                    full_lyrics = f.read().strip()
             else:
-                info["lyrics"] = ""  # or None
+                full_lyrics = ""  # or None
+
+            # setting total song duration
+            total_song_duration = audio.shape[-1] / self.sr
+
+            info["timestamps"] = (t_start, t_end)
+            info["seconds_start"] = seconds_start
+            info["seconds_total"] = seconds_total
+            info["full_lyrics"] = full_lyrics
+            info["padding_mask"] = padding_mask
+            info["sample_rate"] = self.sr
+            info["total_song_duration"] = total_song_duration
+            info["cropped_lyrics"] = self.crop_lyrics_to_segment(
+                full_lyrics, seconds_start, seconds_total, total_song_duration
+            )
+
+            end_time = time.time()
+
+            info["load_time"] = end_time - start_time
 
             info["vocals"] = vocals_tensor
 
