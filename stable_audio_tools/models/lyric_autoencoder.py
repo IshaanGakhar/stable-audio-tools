@@ -3,7 +3,7 @@ from torch import nn
 import typing as tp
 
 from transformers import T5EncoderModel, T5Tokenizer
-from encodec.utils import EncodecTokenizer
+# from encodec.utils import EncodecTokenizer
 
 class LyricsAutoencoder(nn.Module):
     def __init__(
