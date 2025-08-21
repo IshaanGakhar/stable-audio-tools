@@ -548,7 +548,7 @@ class DiTWrapper(ConditionedDiffusionModel):
 
         self.model = DiffusionTransformer(
             diffusion_objective=diffusion_objective,
-            lyrics_latent_dim=lyrics_latent_dim, 
+            # lyrics_latent_dim=lyrics_latent_dim, 
             *args, 
             **kwargs)
 
