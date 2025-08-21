@@ -667,7 +667,7 @@ def create_diffusion_uncond_from_config(config: tp.Dict[str, tp.Any]):
                                 pretransform=pretransform,
                                 min_input_length=min_input_length)
 
-def create_diffusion_cond_from_config(config: tp.Dict[str, tp.Any], lyric_encoder=None, vocal_encoder=None): # TODO: need to extract lyric encoder params
+def create_diffusion_cond_from_config(config: tp.Dict[str, tp.Any], lyric_encoder=None, vocals_encoder=None): # TODO: need to extract lyric encoder params
 
     model_config = config["model"]
 
@@ -747,5 +747,5 @@ def create_diffusion_cond_from_config(config: tp.Dict[str, tp.Any], lyric_encode
         distribution_shift_options=distribution_shift_options,
         **extra_kwargs,
         lyric_encoder=lyric_encoder,
-        vocals_encoder=vocal_encoder
+        vocals_encoder=vocals_encoder
     )
