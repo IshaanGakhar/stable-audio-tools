@@ -1,3 +1,5 @@
+# TO RUN: python3 train.py --dataset-config path/to/your/dataset_configs.json --model-config path/to/your/model_config.json
+
 import torch
 import json
 import os
