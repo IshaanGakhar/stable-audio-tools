@@ -16,27 +16,31 @@ def create_model_from_config(model_config):
     elif model_type == 'diffusion_cond' or model_type == 'diffusion_cond_inpaint':
         print("In factory.py, creating diffusion cond from config")
         from .diffusion import create_diffusion_cond_from_config
+
+        lyric_encoder = None
+        vocals_encoder = None
+        
         lyric_encoder_config = model_config.get("lyric_encoder", None)
+        if lyric_encoder_config is not None:
+            print("In factory.py, creating lyric encoder from config")
+            from .lyric_autoencoder import LyricsAutoencoder
+            lyric_encoder = LyricsAutoencoder(
+                encoder_model_name=lyric_encoder_config.get("encoder_model_name", "t5-base"),
+                latent_dim=lyric_encoder_config.get("latent_dim", 1024),
+                seq_len=lyric_encoder_config.get("seq_len", 256)
+            )
+
         vocals_encoder_config = model_config.get("vocals_encoder", None)
-    lyric_encoder = None
-    if lyric_encoder_config is not None:
-        print("In factory.py, creating lyric encoder from config")
-        from .lyric_autoencoder import LyricsAutoencoder
-        lyric_encoder = LyricsAutoencoder(
-            encoder_model_name=lyric_encoder_config.get("encoder_model_name", "t5-base"),
-            latent_dim=lyric_encoder_config.get("latent_dim", 1024),
-            seq_len=lyric_encoder_config.get("seq_len", 256)
-        )
-        return create_diffusion_cond_from_config(model_config, lyric_encoder=lyric_encoder)
-    if vocals_encoder_config is not None:
-        print("In factory.py, creating vocals encoder from config")
-        from .vocals_encoder import VocalsEncoder # create vocal encoder file
-        vocals_encoder = VocalsEncoder(
-            encoder_model_name=vocals_encoder_config.get("encoder_model_name", "facebook/wav2vec2-base"),
-            latent_dim=vocals_encoder_config.get("latent_dim", 512),
-            seq_len=vocals_encoder_config.get("seq_len", 256)
-        )
-        return create_diffusion_cond_from_config(model_config, vocals_encoder=vocals_encoder)
+        if vocals_encoder_config is not None:
+            print("In factory.py, creating vocals encoder from config")
+            from .vocals_encoder import VocalsEncoder
+            vocals_encoder = VocalsEncoder(
+                encoder_model_name=vocals_encoder_config.get("encoder_model_name", "facebook/wav2vec2-base"),
+                latent_dim=vocals_encoder_config.get("latent_dim", 512),
+                seq_len=vocals_encoder_config.get("seq_len", 256)
+            )
+
+        return create_diffusion_cond_from_config(model_config, lyric_encoder=lyric_encoder, vocals_encoder=vocals_encoder)
     elif model_type == 'diffusion_autoencoder':
         print("In factory.py, creating diffusion autoencoder from config")
         from .autoencoders import create_diffAE_from_config
