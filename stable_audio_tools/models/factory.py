@@ -6,17 +6,21 @@ def create_model_from_config(model_config):
     assert model_type is not None, 'model_type must be specified in model config'
 
     if model_type == 'autoencoder':
+        print("In factory.py, creating autoencoder from config")
         from .autoencoders import create_autoencoder_from_config
         return create_autoencoder_from_config(model_config)
     elif model_type == 'diffusion_uncond':
+        print("In factory.py, creating diffusion uncond from config")
         from .diffusion import create_diffusion_uncond_from_config
         return create_diffusion_uncond_from_config(model_config)
     elif model_type == 'diffusion_cond' or model_type == 'diffusion_cond_inpaint':
+        print("In factory.py, creating diffusion cond from config")
         from .diffusion import create_diffusion_cond_from_config
         lyric_encoder_config = model_config.get("lyric_encoder", None)
         vocals_encoder_config = model_config.get("vocals_encoder", None)
     lyric_encoder = None
     if lyric_encoder_config is not None:
+        print("In factory.py, creating lyric encoder from config")
         from .lyric_autoencoder import LyricsAutoencoder
         lyric_encoder = LyricsAutoencoder(
             encoder_model_name=lyric_encoder_config.get("encoder_model_name", "t5-base"),
@@ -25,6 +29,7 @@ def create_model_from_config(model_config):
         )
         return create_diffusion_cond_from_config(model_config, lyric_encoder=lyric_encoder)
     if vocals_encoder_config is not None:
+        print("In factory.py, creating vocals encoder from config")
         from .vocals_encoder import VocalsEncoder # create vocal encoder file
         vocals_encoder = VocalsEncoder(
             encoder_model_name=vocals_encoder_config.get("encoder_model_name", "facebook/wav2vec2-base"),
@@ -33,9 +38,11 @@ def create_model_from_config(model_config):
         )
         return create_diffusion_cond_from_config(model_config, vocals_encoder=vocals_encoder)
     elif model_type == 'diffusion_autoencoder':
+        print("In factory.py, creating diffusion autoencoder from config")
         from .autoencoders import create_diffAE_from_config
         return create_diffAE_from_config(model_config)
     elif model_type == 'lm':
+        print("In factory.py, creating language model from config")
         from .lm import create_audio_lm_from_config
         return create_audio_lm_from_config(model_config)
     else:
