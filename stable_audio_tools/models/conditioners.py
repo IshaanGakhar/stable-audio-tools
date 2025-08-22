@@ -726,7 +726,7 @@ def create_multi_conditioner_from_conditioning_config(config: tp.Dict[str, tp.An
         elif conditioner_type == "audio":
             # Correctly map "audio" to a Wav2Vec2 conditioner
             conditioners[id] = VocalsEncoder(**conditioner_config)
-        elif config['type'] == "lyric_autoencoder":                                  # TODO: add lyric_autoencoder to config          
+        elif conditioner_type == "lyric_autoencoder":                                  # TODO: add lyric_autoencoder to config          
             conditioners[config['id']] = LyricsAutoencoder(**conditioner_config)      # should return (tensor, mask)
         elif conditioner_type == "clap_audio":
             conditioners[id] = CLAPAudioConditioner(**conditioner_config)
