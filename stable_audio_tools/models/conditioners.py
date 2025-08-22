@@ -15,6 +15,7 @@ from .transformer import AbsolutePositionalEmbedding
 from .lyric_autoencoder import LyricsAutoencoder
 
 from torch import nn
+from transformers import Wav2Vec2Processor, Wav2Vec2ForCTC
 
 class Conditioner(nn.Module):
     def __init__(
@@ -717,10 +718,16 @@ def create_multi_conditioner_from_conditioning_config(config: tp.Dict[str, tp.An
 
         if conditioner_type == "t5":
             conditioners[id] = T5Conditioner(**conditioner_config)
+        elif conditioner_type == "text":
+            # Correctly map "text" to the T5 conditioner
+            conditioners[id] = T5Conditioner(**conditioner_config)
         elif conditioner_type == "clap_text":
             conditioners[id] = CLAPTextConditioner(**conditioner_config)
-        elif config['type'] == "lyric_autoencoder":                               # TODO: add lyric_autoencoder to config              
-            conditioners[config['id']] = LyricsAutoencoder(**conditioner_config)  # should return (tensor, mask)
+        elif conditioner_type == "audio":
+            # Correctly map "audio" to a Wav2Vec2 conditioner
+            conditioners[id] = Wav2Vec2Conditioner(**conditioner_config)
+        elif config['type'] == "lyric_autoencoder":                                  # TODO: add lyric_autoencoder to config          
+            conditioners[config['id']] = LyricsAutoencoder(**conditioner_config)      # should return (tensor, mask)
         elif conditioner_type == "clap_audio":
             conditioners[id] = CLAPAudioConditioner(**conditioner_config)
         elif conditioner_type == "int":
