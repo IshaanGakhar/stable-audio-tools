@@ -1,0 +1,28 @@
+{
+  "dataset_type": "audio_dir_and_text",
+  "datasets": [
+    {
+      "id": "my_proxy_dataset",
+      "path": "proxy_dataset"
+    }
+  ],
+  "target_sr": 44100,
+  "target_length": 65536,
+  "random_crop": true,
+  "tokenizer_config": {
+    "name": "full-text-tokenizer"
+  },
+  "text_encoder_config": {
+    "name": "t5",
+    "args": {
+      "model_name": "t5-base",
+      "max_length": 256
+    }
+  },
+  "audio_encoder_config": {
+    "name": "wav2vec2",
+    "args": {
+      "model_name": "facebook/wav2vec2-base"
+    }
+  }
+}
