@@ -13,9 +13,9 @@ from .pretransforms import Pretransform
 from .utils import load_ckpt_state_dict
 from .transformer import AbsolutePositionalEmbedding
 from .lyric_autoencoder import LyricsAutoencoder
+from .vocals_encoder import VocalsEncoder
 
 from torch import nn
-from transformers import Wav2Vec2Processor, Wav2Vec2ForCTC
 
 class Conditioner(nn.Module):
     def __init__(
@@ -725,7 +725,7 @@ def create_multi_conditioner_from_conditioning_config(config: tp.Dict[str, tp.An
             conditioners[id] = CLAPTextConditioner(**conditioner_config)
         elif conditioner_type == "audio":
             # Correctly map "audio" to a Wav2Vec2 conditioner
-            conditioners[id] = Wav2Vec2Conditioner(**conditioner_config)
+            conditioners[id] = VocalsEncoder(**conditioner_config)
         elif config['type'] == "lyric_autoencoder":                                  # TODO: add lyric_autoencoder to config          
             conditioners[config['id']] = LyricsAutoencoder(**conditioner_config)      # should return (tensor, mask)
         elif conditioner_type == "clap_audio":
