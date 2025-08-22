@@ -113,7 +113,14 @@ class ListConditioner(Conditioner):
         return [int_embeds, torch.ones(int_embeds.shape[0], 1).to(device)]
 
 def clap_load_state_dict(clap_ckpt_path, clap_model):
-    state_dict = torch.load(clap_ckpt_path, map_location="cpu", weights_only=False)["state_dict"]
+    loaded_object = torch.load(clap_ckpt_path, map_location="cpu", weights_only=False)
+
+    # Check if the loaded object is a dictionary with a 'state_dict' key
+    if isinstance(loaded_object, dict) and "state_dict" in loaded_object:
+        state_dict = loaded_object["state_dict"]
+    else:
+        # Otherwise, assume the loaded object is the state_dict itself
+        state_dict = loaded_object
 
     # Remove "module." from state dict keys
     state_dict = {k[7:]: v for k, v in state_dict.items()}
