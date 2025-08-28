@@ -47,7 +47,7 @@
                     "config": {
                         "audio_model_type": "HTSAT-base",
                         "enable_fusion": true,
-                        "clap_ckpt_path": "/content/model.safetensors",
+                        "clap_ckpt_path": "/content/pytorch_model.bin",
                         "use_text_features": true,
                         "feature_layer_ix": -2
                     }
