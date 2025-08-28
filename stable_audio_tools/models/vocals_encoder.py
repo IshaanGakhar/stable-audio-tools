@@ -9,6 +9,7 @@ class VocalsEncoder(nn.Module):
         encoder_model_name: str = "facebook/wav2vec2-base",
         latent_dim: int = 512,
         seq_len: int = 256,
+        output_dim: int = 512
     ):
         super().__init__()
         self.processor = Wav2Vec2Processor.from_pretrained(encoder_model_name)
