@@ -323,7 +323,8 @@ class T5Conditioner(Conditioner):
             enable_grad: bool = False,
             project_out: bool = False,
             encoder_model_name: str = None,
-            latent_dim=None
+            latent_dim=None,
+            seq_len=None
     ):
         assert t5_model_name in self.T5_MODELS, f"Unknown T5 model name: {t5_model_name}"
         super().__init__(self.T5_MODEL_DIMS[t5_model_name], output_dim, project_out=project_out)
