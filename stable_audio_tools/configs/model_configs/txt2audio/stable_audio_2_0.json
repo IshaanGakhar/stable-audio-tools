@@ -47,7 +47,7 @@
                     "config": {
                         "audio_model_type": "HTSAT-base",
                         "enable_fusion": true,
-                        "clap_ckpt_path": "/path/to/clap.ckpt",
+                        "clap_ckpt_path": "/content/model.safetensors",
                         "use_text_features": true,
                         "feature_layer_ix": -2
                     }
